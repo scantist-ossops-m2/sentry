@@ -30,7 +30,6 @@ def register_temporary_features(manager: FeatureManager):
     # NOTE: Please maintain alphabetical order when adding new feature flags
 
     # Features that don't use resource scoping
-    manager.add("auth:enterprise-staff-cookie", SystemFeature, FeatureHandlerStrategy.INTERNAL)
     manager.add("auth:enterprise-superuser-read-write", SystemFeature, FeatureHandlerStrategy.INTERNAL)
     manager.add("auth:register", SystemFeature, FeatureHandlerStrategy.INTERNAL)
     manager.add("organizations:create", SystemFeature, FeatureHandlerStrategy.INTERNAL)
@@ -98,8 +97,6 @@ def register_temporary_features(manager: FeatureManager):
     manager.add("organizations:issue-priority-ui", OrganizationFeature, FeatureHandlerStrategy.REMOTE)
     manager.add("organizations:issue-search-allow-postgres-only-search", OrganizationFeature, FeatureHandlerStrategy.REMOTE)
     manager.add("organizations:issue-search-group-attributes-side-query", OrganizationFeature, FeatureHandlerStrategy.REMOTE)
-    manager.add("organizations:issue-search-use-cdc-primary", OrganizationFeature, FeatureHandlerStrategy.REMOTE)
-    manager.add("organizations:issue-search-use-cdc-secondary", OrganizationFeature, FeatureHandlerStrategy.REMOTE)
     manager.add("organizations:issue-stream-performance", OrganizationFeature, FeatureHandlerStrategy.REMOTE)
     manager.add("organizations:large-debug-files", OrganizationFeature, FeatureHandlerStrategy.INTERNAL)
     manager.add("organizations:latest-adopted-release-filter", OrganizationFeature, FeatureHandlerStrategy.REMOTE)
@@ -176,9 +173,9 @@ def register_temporary_features(manager: FeatureManager):
     manager.add("organizations:performance-tracing-without-performance", OrganizationFeature, FeatureHandlerStrategy.REMOTE)
     manager.add("organizations:performance-transaction-name-only-search", OrganizationFeature, FeatureHandlerStrategy.REMOTE)
     manager.add("organizations:performance-transaction-name-only-search-indexed", OrganizationFeature, FeatureHandlerStrategy.REMOTE)
+    manager.add("organizations:performance-transaction-summary-cleanup", OrganizationFeature, FeatureHandlerStrategy.REMOTE)
     manager.add("organizations:performance-trends-issues", OrganizationFeature, FeatureHandlerStrategy.REMOTE)
     manager.add("organizations:performance-trends-new-data-date-range-default", OrganizationFeature, FeatureHandlerStrategy.REMOTE)
-    manager.add("organizations:performance-trendsv2-dev-only", OrganizationFeature, FeatureHandlerStrategy.REMOTE)
     manager.add("organizations:performance-use-metrics", OrganizationFeature, FeatureHandlerStrategy.REMOTE)
     manager.add("organizations:performance-vitals-inp", OrganizationFeature, FeatureHandlerStrategy.REMOTE)
     manager.add("organizations:profiling", OrganizationFeature, FeatureHandlerStrategy.INTERNAL)
@@ -192,6 +189,7 @@ def register_temporary_features(manager: FeatureManager):
     manager.add("organizations:project-event-date-limit", OrganizationFeature, FeatureHandlerStrategy.REMOTE)
     manager.add("organizations:project-stats", OrganizationFeature, FeatureHandlerStrategy.REMOTE)
     manager.add("organizations:related-events", OrganizationFeature, FeatureHandlerStrategy.INTERNAL)
+    manager.add("organizations:related-issues", OrganizationFeature, FeatureHandlerStrategy.REMOTE)
     manager.add("organizations:relay-cardinality-limiter", OrganizationFeature, FeatureHandlerStrategy.INTERNAL)
     manager.add("organizations:release-comparison-performance", OrganizationFeature, FeatureHandlerStrategy.REMOTE)
     manager.add("organizations:release-health-drop-sessions", OrganizationFeature, FeatureHandlerStrategy.REMOTE)
@@ -227,7 +225,6 @@ def register_temporary_features(manager: FeatureManager):
     manager.add("organizations:settings-legal-tos-ui", OrganizationFeature, FeatureHandlerStrategy.REMOTE)
     manager.add("organizations:slack-block-kit", OrganizationFeature, FeatureHandlerStrategy.INTERNAL)
     manager.add("organizations:slack-overage-notifications", OrganizationFeature, FeatureHandlerStrategy.REMOTE)
-    manager.add("organizations:slack-thread", OrganizationFeature, FeatureHandlerStrategy.REMOTE)
     manager.add("organizations:slack-thread-issue-alert", OrganizationFeature, FeatureHandlerStrategy.REMOTE)
     manager.add("organizations:snql-join-reports", OrganizationFeature, FeatureHandlerStrategy.INTERNAL)
     manager.add("organizations:sourcemaps-bundle-flat-file-indexing", OrganizationFeature, FeatureHandlerStrategy.REMOTE)
@@ -258,7 +255,6 @@ def register_temporary_features(manager: FeatureManager):
     manager.add("organizations:use-metrics-layer", OrganizationFeature, FeatureHandlerStrategy.REMOTE)
     manager.add("organizations:use-metrics-layer-in-alerts", OrganizationFeature, FeatureHandlerStrategy.INTERNAL)
     manager.add("organizations:user-feedback-ingest", OrganizationFeature, FeatureHandlerStrategy.INTERNAL)
-    manager.add("organizations:user-feedback-onboarding", OrganizationFeature, FeatureHandlerStrategy.REMOTE)
     manager.add("organizations:user-feedback-replay-clip", OrganizationFeature, FeatureHandlerStrategy.REMOTE)
     manager.add("organizations:user-feedback-spam-filter-ingest", OrganizationFeature, FeatureHandlerStrategy.INTERNAL)
     manager.add("organizations:user-feedback-spam-filter-ui", OrganizationFeature, FeatureHandlerStrategy.REMOTE)
@@ -293,8 +289,4 @@ def register_temporary_features(manager: FeatureManager):
     manager.add("projects:plugins", ProjectPluginFeature, FeatureHandlerStrategy.INTERNAL)
 
     manager.add("projects:profiling-ingest-unsampled-profiles", ProjectFeature, FeatureHandlerStrategy.REMOTE)
-
-    # Workflow 2.0 Project features
-    manager.add("projects:auto-associate-commits-to-release", ProjectFeature, FeatureHandlerStrategy.INTERNAL)
-
     # fmt: on
