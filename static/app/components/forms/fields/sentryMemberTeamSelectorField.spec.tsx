@@ -1,5 +1,4 @@
 import {OrganizationFixture} from 'sentry-fixture/organization';
-import {ProjectFixture} from 'sentry-fixture/project';
 import {TeamFixture} from 'sentry-fixture/team';
 import {UserFixture} from 'sentry-fixture/user';
 
@@ -16,7 +15,6 @@ describe('SentryMemberTeamSelectorField', () => {
   const org = OrganizationFixture();
   const mockUsers = [UserFixture()];
   const mockTeams = [TeamFixture()];
-  const mockProjects = [ProjectFixture()];
 
   beforeEach(() => {
     MemberListStore.init();
@@ -41,13 +39,7 @@ describe('SentryMemberTeamSelectorField', () => {
 
   it('can change values', async () => {
     const mock = jest.fn();
-    render(
-      <SentryMemberTeamSelectorField
-        onChange={mock}
-        name="team-or-member"
-        projects={mockProjects}
-      />
-    );
+    render(<SentryMemberTeamSelectorField onChange={mock} name="team-or-member" />);
 
     await selectEvent.select(screen.getByText(/Choose Teams and Members/i), '#team-slug');
 
