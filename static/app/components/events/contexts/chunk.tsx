@@ -8,7 +8,7 @@ import {defined} from 'sentry/utils';
 
 import {getContextComponent, getSourcePlugin, getTitle} from './utils';
 
-export type ChunkProps = {
+type Props = {
   alias: string;
   event: Event;
   type: string;
@@ -16,7 +16,7 @@ export type ChunkProps = {
   value?: Record<string, any>;
 };
 
-export function Chunk({group, type, alias, value = {}, event}: ChunkProps) {
+export function Chunk({group, type, alias, value = {}, event}: Props) {
   const [pluginLoading, setPluginLoading] = useState(false);
 
   const syncPlugin = useCallback(() => {
