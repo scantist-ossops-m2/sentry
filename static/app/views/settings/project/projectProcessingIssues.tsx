@@ -456,7 +456,7 @@ class ProjectProcessingIssues extends Component<Props, State> {
           </TextBlock>
           <TextBlock noMargin>
             {tct(
-              `Please refer to the documentation on [link:Reprocessing] to learn more about the new method to 
+              `Please refer to the documentation on [link:Reprocessing] to learn more about the new method to
             reprocess events.`,
               {
                 link: (
