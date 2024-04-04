@@ -456,8 +456,8 @@ class ProjectProcessingIssues extends Component<Props, State> {
           </TextBlock>
           <TextBlock noMargin>
             {tct(
-              `Refer to the documentation on [link:Reprocessing] to learn more about
-            how to reprocess events.`,
+              `Please refer to the documentation on [link:Reprocessing] to learn more about the new method to 
+            reprocess events.`,
               {
                 link: (
                   <ExternalLink href="https://docs.sentry.io/product/issues/reprocessing/" />
