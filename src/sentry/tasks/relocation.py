@@ -1097,6 +1097,7 @@ def postprocessing(uuid: str) -> None:
                 user_id=relocation.owner_id,
                 role="owner",
             )
+
         # Last, but certainly not least: trigger signals, so that interested subscribers in eg:
         # getsentry can do whatever postprocessing they need to. If even a single one fails, we fail
         # the entire task.
@@ -1104,8 +1105,8 @@ def postprocessing(uuid: str) -> None:
             if isinstance(result, Exception):
                 raise result
 
-        # This signal nust come after the relocated signal, to ensure that the subscription and customer models
-        # have been appropriately set up before attempting to redeem a promo code.
+        # This signal must come after the relocated signal, to ensure that the subscription and
+        # customer models have been appropriately set up before attempting to redeem a promo code.
         relocation_redeem_promo_code.send_robust(
             sender=postprocessing,
             user_id=relocation.owner_id,
