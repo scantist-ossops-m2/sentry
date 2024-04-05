@@ -17,6 +17,7 @@ import {SegmentedControl} from 'sentry/components/segmentedControl';
 import type {SmartSearchBarProps} from 'sentry/components/smartSearchBar';
 import {t} from 'sentry/locale';
 import {space} from 'sentry/styles/space';
+import {defined} from 'sentry/utils';
 import type {Sort} from 'sentry/utils/discover/fields';
 import {decodeInteger, decodeScalar} from 'sentry/utils/queryString';
 import {MutableSearch} from 'sentry/utils/tokenizeSearch';
@@ -69,10 +70,6 @@ function Option1() {
   const query = useMemo(() => {
     return decodeScalar(location.query.query, '');
   }, [location.query.query]);
-
-  const limit = useMemo(() => {
-    return decodeInteger(location.query.perPage, DEFAULT_PER_PAGE);
-  }, [location.query.perPage]);
 
   const handleSearch: SmartSearchBarProps['onSearch'] = useCallback(
     (searchQuery: string) => {
@@ -135,6 +132,10 @@ function Option1() {
     [currentSort, location]
   );
 
+  const limit = useMemo(() => {
+    return decodeInteger(location.query.perPage, DEFAULT_PER_PAGE);
+  }, [location.query.perPage]);
+
   const spansQuery = useIndexedSpans({
     fields,
     filters,
@@ -160,7 +161,7 @@ function Option1() {
   return (
     <Fragment>
       <SegmentedControl
-        aria-label={t('Span Type')}
+        aria-label={t('Search Only Span Type')}
         value={spanType}
         onChange={st => setSpanType(st as SpanType)}
       >
@@ -232,7 +233,128 @@ function renderBodyCell() {
 }
 
 function Option2() {
-  return <Fragment />;
+  const [spanType, setSpanType] = useState<SpanType>('trace root');
+
+  const location = useLocation();
+
+  const query = useMemo(() => {
+    return decodeScalar(location.query.query, '');
+  }, [location.query.query]);
+
+  const handleSearch: SmartSearchBarProps['onSearch'] = useCallback(
+    (searchQuery: string) => {
+      browserHistory.push({
+        ...location,
+        query: {
+          ...location.query,
+          cursor: undefined,
+          query: searchQuery || undefined,
+        },
+      });
+    },
+    [location]
+  );
+
+  const handleCursor: CursorHandler = useCallback((newCursor, pathname, newQuery) => {
+    browserHistory.push({
+      pathname,
+      query: {...newQuery, cursor: newCursor},
+    });
+  }, []);
+
+  const filters = useMemo(() => {
+    const search = new MutableSearch(query ?? '');
+    return search.filters;
+  }, [query]);
+
+  const limit = useMemo(() => {
+    return decodeInteger(location.query.perPage, DEFAULT_PER_PAGE);
+  }, [location.query.perPage]);
+
+  const fields2 = useMemo(() => {
+    if (spanType === 'trace root') {
+      return ['trace', 'count()'];
+    }
+    return ['trace', 'transaction.id', 'count()'];
+  }, [spanType]);
+
+  const primaryQuery = useIndexedSpans({
+    fields: fields2 as any, // whatever
+    filters,
+    limit,
+    sorts: [],
+    referrer: 'api.trace-explorer.table',
+  });
+
+  const groupFilters = useMemo(() => {
+    const filter = {
+      trace: [] as string[],
+      'transaction.id': [] as string[],
+    };
+    for (const row of primaryQuery.data ?? []) {
+      filter.trace.push(row.trace);
+      if (spanType === 'transaction root') {
+        filter['transaction.id'].push(row['transaction.id']);
+      }
+    }
+    return filter;
+  }, [primaryQuery.data, spanType]);
+
+  useIndexedSpans({
+    fields: [...fields2, 'max(timestamp)', 'min(timestamp)'] as any[],
+    filters: groupFilters,
+    limit,
+    sorts: [],
+    referrer: 'api.trace-explorer.table',
+    enabled: defined(primaryQuery.data),
+  });
+
+  // const rollupFilter = useMemo(() => {
+  //   console.log(spansQuery.data ?? []);
+
+  //   const seen = new Set();
+  //   for (const span of spansQuery.data ?? []) {
+  //     if (spanType === 'trace root') {
+  //       seen.add(span.trace);
+  //     } else {
+  //       seen.add(span['transaction.id']);
+  //     }
+  //   }
+  //   console.log(seen);
+  // }, [spansQuery.data, spanType]);
+
+  return (
+    <Fragment>
+      <SegmentedControl
+        aria-label={t('Rollup Span Type')}
+        value={spanType}
+        onChange={st => setSpanType(st as SpanType)}
+      >
+        <SegmentedControl.Item key="trace root">
+          {t('Roll Up By Trace Roots')}
+          <QuestionTooltip
+            size="xs"
+            position="top"
+            title={t(
+              'Searches for trace roots where at least 1 span matches the search ALL criterias.'
+            )}
+          />
+        </SegmentedControl.Item>
+        <SegmentedControl.Item key="transaction root">
+          {t('Roll Up By Transaction Root')}
+          <QuestionTooltip
+            size="xs"
+            position="top"
+            title={t(
+              'Searches for transaction roots where at least 1 span matches the search ALL criterias.'
+            )}
+          />
+        </SegmentedControl.Item>
+      </SegmentedControl>
+      <TracesSearchBar query={query} handleSearch={handleSearch} />
+      <StyledPagination pageLinks={primaryQuery.pageLinks} onCursor={handleCursor} />
+    </Fragment>
+  );
 }
 
 const LayoutMain = styled(Layout.Main)`
