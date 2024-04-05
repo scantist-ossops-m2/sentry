@@ -181,7 +181,7 @@ export function getUnknownData({
     }));
 }
 
-export function getTitle({
+export function getContextTitle({
   alias,
   type,
   value = {},
@@ -217,11 +217,11 @@ export function getTitle({
       return t('OpenTelemetry');
     case 'unity':
       return t('Unity');
-    case 'memory_info': // Future new value for memory info
-    case 'Memory Info': // Current value for memory info
+    case 'memory_info': // Current value for memory info
+    case 'Memory Info': // Legacy for memory info
       return t('Memory Info');
-    case 'threadpool_info': // Future new value for thread pool info
-    case 'ThreadPool Info': // Current value for thread pool info
+    case 'threadpool_info': // Current value for thread pool info
+    case 'ThreadPool Info': // Legacy value for thread pool info
       return t('Thread Pool Info');
     case 'default':
       if (alias === 'state') {
@@ -230,6 +230,22 @@ export function getTitle({
       return toTitleCase(alias);
     default:
       return toTitleCase(type);
+  }
+}
+
+export function getContextMeta(event: Event, type: string): Record<string, any> {
+  const defaultMeta = event._meta?.contexts?.[type] ?? {};
+  switch (type) {
+    case 'memory_info': // Current
+    case 'Memory Info': // Legacy
+      return event._meta?.contexts?.['Memory Info'] ?? defaultMeta;
+    case 'threadpool_info': // Current
+    case 'ThreadPool Info': // Legacy
+      return event._meta?.contexts?.['ThreadPool Info'] ?? defaultMeta;
+    case 'user':
+      return event._meta?.user ?? defaultMeta;
+    default:
+      return defaultMeta;
   }
 }
 

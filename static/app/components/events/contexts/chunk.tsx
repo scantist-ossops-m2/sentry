@@ -6,7 +6,12 @@ import type {Group} from 'sentry/types';
 import type {Event} from 'sentry/types/event';
 import {defined} from 'sentry/utils';
 
-import {getContextComponent, getSourcePlugin, getTitle} from './utils';
+import {
+  getContextComponent,
+  getContextMeta,
+  getContextTitle,
+  getSourcePlugin,
+} from './utils';
 
 type Props = {
   alias: string;
@@ -77,14 +82,19 @@ export function Chunk({group, type, alias, value = {}, event}: Props) {
       type={`context-${alias}`}
       title={
         <Fragment>
-          {getTitle({value, alias, type})}
+          {getContextTitle({value, alias, type})}
           {defined(type) && type !== 'default' && alias !== type && (
             <small>({alias})</small>
           )}
         </Fragment>
       }
     >
-      <ContextComponent alias={alias} event={event} data={value} />
+      <ContextComponent
+        alias={alias}
+        event={event}
+        data={value}
+        meta={getContextMeta(event, type)}
+      />
     </EventDataSection>
   );
 }
