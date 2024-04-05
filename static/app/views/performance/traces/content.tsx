@@ -17,12 +17,15 @@ import {SegmentedControl} from 'sentry/components/segmentedControl';
 import type {SmartSearchBarProps} from 'sentry/components/smartSearchBar';
 import {t} from 'sentry/locale';
 import {space} from 'sentry/styles/space';
-import {defined} from 'sentry/utils';
+import EventView from 'sentry/utils/discover/eventView';
 import type {Sort} from 'sentry/utils/discover/fields';
+import {DiscoverDatasets} from 'sentry/utils/discover/types';
 import {decodeInteger, decodeScalar} from 'sentry/utils/queryString';
 import {MutableSearch} from 'sentry/utils/tokenizeSearch';
 import {useLocation} from 'sentry/utils/useLocation';
 import {useIndexedSpans} from 'sentry/views/starfish/queries/useIndexedSpans';
+import type {SpanIndexedFieldTypes} from 'sentry/views/starfish/types';
+import {useSpansQuery} from 'sentry/views/starfish/utils/useSpansQuery';
 
 import {getFieldRenderer} from './table/fieldRenderers';
 import {fields} from './data';
@@ -141,7 +144,7 @@ function Option1() {
     filters,
     limit,
     sorts: [currentSort],
-    referrer: 'api.trace-explorer.table',
+    referrer: 'api.trace-explorer.option-1.table',
   });
 
   const spans = useMemo(() => {
@@ -275,7 +278,7 @@ function Option2() {
     if (spanType === 'trace root') {
       return ['trace', 'count()'];
     }
-    return ['trace', 'transaction.id', 'count()'];
+    return ['project', 'trace', 'transaction.id', 'count()'];
   }, [spanType]);
 
   const primaryQuery = useIndexedSpans({
@@ -283,45 +286,91 @@ function Option2() {
     filters,
     limit,
     sorts: [],
-    referrer: 'api.trace-explorer.table',
+    referrer: 'api.trace-explorer.option-2.primary',
   });
 
-  const groupFilters = useMemo(() => {
-    const filter = {
-      trace: [] as string[],
-      'transaction.id': [] as string[],
-    };
+  const eventView = useMemo(() => {
+    const field = spanType === 'trace root' ? 'trace' : 'transaction.id';
+    const values = [] as string[];
     for (const row of primaryQuery.data ?? []) {
-      filter.trace.push(row.trace);
-      if (spanType === 'transaction root') {
-        filter['transaction.id'].push(row['transaction.id']);
-      }
+      values.push(row[field]);
     }
-    return filter;
-  }, [primaryQuery.data, spanType]);
+    return EventView.fromNewQueryWithLocation(
+      {
+        name: '',
+        query: `${field}:[${values.join(', ')}]`,
+        fields: fields2,
+        dataset: DiscoverDatasets.SPANS_INDEXED,
+        version: 2,
+      },
+      location
+    );
+  }, [fields2, location, primaryQuery.data, spanType]);
 
-  useIndexedSpans({
-    fields: [...fields2, 'max(timestamp)', 'min(timestamp)'] as any[],
-    filters: groupFilters,
+  const secondaryQuery = useSpansQuery<SpanIndexedFieldTypes[]>({
+    eventView,
+    cursor: '0:0:0', // hardcoded the cursor here cuz it gets loaded from the url somehow
     limit,
-    sorts: [],
-    referrer: 'api.trace-explorer.table',
-    enabled: defined(primaryQuery.data),
+    referrer: 'api.trace-explorer.option-2.secondary',
+    enabled: (primaryQuery.data?.length ?? 0) > 0,
   });
 
-  // const rollupFilter = useMemo(() => {
-  //   console.log(spansQuery.data ?? []);
+  const results = useMemo(() => {
+    const ret = {};
+    const key = spanType === 'trace root' ? 'trace' : 'transaction.id';
+    for (const row of primaryQuery.data ?? []) {
+      const group = {
+        project: row.project,
+        trace: row.trace,
+        'transaction.id': row['transaction.id'],
+        'matching spans': row['count()'],
+      };
+      ret[row[key]] = group;
+    }
+    for (const row of secondaryQuery.data ?? []) {
+      const group = ret[row[key]];
+      group['all spans'] = row['count()'];
+    }
+    return Object.values(ret);
+  }, [primaryQuery, secondaryQuery, spanType]);
 
-  //   const seen = new Set();
-  //   for (const span of spansQuery.data ?? []) {
-  //     if (spanType === 'trace root') {
-  //       seen.add(span.trace);
-  //     } else {
-  //       seen.add(span['transaction.id']);
-  //     }
-  //   }
-  //   console.log(seen);
-  // }, [spansQuery.data, spanType]);
+  const columnOrder: any[] = useMemo(
+    () =>
+      [
+        spanType === 'trace root'
+          ? {
+              key: 'trace',
+              width: COL_WIDTH_UNDEFINED,
+              name: 'trace',
+            }
+          : undefined,
+        spanType === 'transaction root'
+          ? {
+              key: 'project',
+              width: COL_WIDTH_UNDEFINED,
+              name: 'project',
+            }
+          : undefined,
+        spanType === 'transaction root'
+          ? {
+              key: 'transaction.id',
+              width: COL_WIDTH_UNDEFINED,
+              name: 'transaction.id',
+            }
+          : undefined,
+        {
+          key: 'matching spans',
+          width: COL_WIDTH_UNDEFINED,
+          name: 'matching spans',
+        },
+        {
+          key: 'all spans',
+          width: COL_WIDTH_UNDEFINED,
+          name: 'all spans',
+        },
+      ].filter(Boolean),
+    [spanType]
+  );
 
   return (
     <Fragment>
@@ -352,6 +401,16 @@ function Option2() {
         </SegmentedControl.Item>
       </SegmentedControl>
       <TracesSearchBar query={query} handleSearch={handleSearch} />
+      <GridEditable
+        isLoading={primaryQuery.isFetching || secondaryQuery.isFetching}
+        columnOrder={columnOrder}
+        columnSortBy={[]}
+        data={results}
+        grid={{
+          renderBodyCell: renderBodyCell(),
+        }}
+        location={location}
+      />
       <StyledPagination pageLinks={primaryQuery.pageLinks} onCursor={handleCursor} />
     </Fragment>
   );
