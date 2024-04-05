@@ -46,7 +46,6 @@ export default function OnboardingStatus({
   };
   const onboardingContext = useContext(OnboardingContext);
   const {projects} = useProjects();
-
   if (!org.features?.includes('onboarding')) {
     return null;
   }
