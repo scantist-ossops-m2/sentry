@@ -1,4 +1,3 @@
-from .user import *  # NOQA
 from .activity import *  # NOQA
 from .actor import *  # NOQA
 from .apiapplication import *  # NOQA
@@ -124,6 +123,7 @@ from .team import *  # NOQA
 from .teamreplica import *  # NOQA
 from .tombstone import *  # NOQA
 from .transaction_threshold import *  # NOQA
+from .user import *  # NOQA
 from .useremail import *  # NOQA
 from .userip import *  # NOQA
 from .userpermission import *  # NOQA
